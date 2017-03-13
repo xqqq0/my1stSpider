@@ -1,13 +1,13 @@
-#-*-coding:utf-8-*-
+# -*-coding:utf-8-*-
 import json
 from urllib import urlencode
-from  requests.exceptions import RequestException
+from requests.exceptions import RequestException
 import requests
 
 
 '''
 获取首页的数据
-1.讲过分析得出，首页的图片数据是通过ajax请求获取，
+1.经过分析得出，首页的图片数据是通过ajax请求获取，
 所以get_page_index构建一个ajax请求，获取数据
 '''
 def get_page_index(offset,keyword):
@@ -28,7 +28,9 @@ def get_page_index(offset,keyword):
     # 发起请求通过requests框架
     try:
         response = requests.get(url)
-        return response.text
+        if response.status_code == 200:
+            return response.text
+        return response.status_code
     except RequestException:
         print("首页索引页面获取失败")
         return None
@@ -46,10 +48,24 @@ def parse_page_index(html):
         for item in data.get("data"):
             yield item.get("article_url")
 
+'''
+3.获取页面详情页数据，与获取索引页相同，
+'''
+def get_page_detail(url):
+    try:
+        respose = requests.get(url)
+        if respose.status_code == 200:
+            return respose.text
+        return respose.status_code
+    except RequestException:
+        print("页面详情获取失败")
+        return None
+
+
 def main():
     html = get_page_index(0,"街拍")
     for url in parse_page_index(html):
-        print(url)
+        detail  = get_page_detail(url)
 
 if __name__ == "__main__":
     main()
