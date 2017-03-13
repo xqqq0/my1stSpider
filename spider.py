@@ -1,7 +1,9 @@
 #-*-coding:utf-8-*-
-import requests
-from  requests.exceptions import RequestException
+import json
 from urllib import urlencode
+from  requests.exceptions import RequestException
+import requests
+
 
 '''
 获取首页的数据
@@ -31,9 +33,23 @@ def get_page_index(offset,keyword):
         print("首页索引页面获取失败")
         return None
 
+'''
+2.将首页返回的json字符串数进行提取
+'''
+def parse_page_index(html):
+    # 将json字符串转换为json数据，需要import json
+    data = json.loads(html)
+    #经过分析发现，图片素材是在json的data/image_url节点之下
+    ##先判断节点是否存在
+    if data and "data" in data.keys():
+        ## 如果存在则获取"data"节点的数据
+        for item in data.get("data"):
+            yield item.get("article_url")
+
 def main():
     html = get_page_index(0,"街拍")
-    print html
+    for url in parse_page_index(html):
+        print(url)
 
 if __name__ == "__main__":
     main()
