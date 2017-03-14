@@ -1,11 +1,25 @@
 # -*-coding:utf-8-*-
 import re
 
+import pymongo
 from bs4 import BeautifulSoup
 import json
 from urllib import urlencode
 from requests.exceptions import RequestException
 import requests
+
+from config import *
+
+from pymongo import MongoClient
+
+'''
+5将数据存储到mongoDB
+'''
+# 建立数据库连接
+client = pymongo.MongoClient(MONGO_URL, 27017)
+# 创建数据库
+db = client.database_name
+
 
 
 '''
@@ -88,7 +102,8 @@ def parse_page_detail(html, url):
                 "url": url
             }
     else:
-        print("*****")
+        print("详情页解析失败")
+
 
 
 def main():
@@ -96,7 +111,7 @@ def main():
     for url in parse_page_index(html):
         detail = get_page_detail(url)
         # 这里进行一下判断，如果能正常返回在进行解析
-        if detail:
+        if detail and parse_page_detail(detail, url):
             print (parse_page_detail(detail, url))
 if __name__ == "__main__":
     main()
