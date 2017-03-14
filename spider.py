@@ -4,11 +4,14 @@ import os
 import pymongo
 import json
 import requests
+from config import *
+from hashlib import md5
 from bs4 import BeautifulSoup
 from urllib import urlencode
-from hashlib import md5
+from multiprocessing import Pool
 from requests.exceptions import RequestException
-from config import *
+
+
 
 from pymongo import MongoClient
 
@@ -16,7 +19,7 @@ from pymongo import MongoClient
 5将数据存储到mongoDB
 '''
 # 建立数据库连接
-client = pymongo.MongoClient(MONGO_URL, 27017)
+client = pymongo.MongoClient(MONGO_URL, 27017, connect=False)
 # 创建数据库
 db = client[MONGO_TABLE]
 
@@ -141,16 +144,24 @@ def parse_image(image):
             f.write(image)
             f.close()
 
-def main():
-    html = get_page_index(0, "街拍")
+def main(offset):
+    html = get_page_index(offset, KEYWORD)
     for url in parse_page_index(html):
         detail = get_page_detail(url)
         # 这里进行一下判断，如果能正常返回在进行解析
         if detail and parse_page_detail(detail, url):
             result = parse_page_detail(detail, url)
-            save_to_db(result)
+            if result:
+                save_to_db(result)
 if __name__ == "__main__":
-    main()
+    groups = [x*20 for x in range(GROUP_START, GROUP_END + 1)]
+    # 生成一个进程池
+    pool = Pool()
+    pool.map(main, groups)
+
+
+
+
 
 
 
