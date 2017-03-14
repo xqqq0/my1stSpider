@@ -1,13 +1,13 @@
 # -*-coding:utf-8-*-
 import re
-
+import os
 import pymongo
-from bs4 import BeautifulSoup
 import json
-from urllib import urlencode
-from requests.exceptions import RequestException
 import requests
-
+from bs4 import BeautifulSoup
+from urllib import urlencode
+from hashlib import md5
+from requests.exceptions import RequestException
 from config import *
 
 from pymongo import MongoClient
@@ -18,7 +18,7 @@ from pymongo import MongoClient
 # 建立数据库连接
 client = pymongo.MongoClient(MONGO_URL, 27017)
 # 创建数据库
-db = client.database_name
+db = client[MONGO_TABLE]
 
 
 
@@ -96,6 +96,7 @@ def parse_page_detail(html, url):
         data = json.loads(match.group(1))
         if data and "sub_images" in data.keys():
             images = [item.get("url") for item in data.get("sub_images")]
+            for image in images: download_image(image)
             return {
                 "title": title,
                 "image": images,
@@ -112,6 +113,33 @@ def save_to_db(result):
         print("存储到数据库成功")
         return True
     return False
+'''
+7.下载图片
+'''
+def download_image(url):
+    response = requests.get(url)
+    try:
+        if response.status_code == 200:
+            print("正在下载")
+            parse_image(response.content)
+        return u"图片下载失败{:d}".format(response.status_code)
+    except RequestException:
+        print("图片下载失败")
+        return None
+
+'''
+8.将下载的数据转换为图片
+'''
+def parse_image(image):
+    # 保存在当前目录之下
+    # os.getcwd()获取当前目录
+    # 方式文件重复加密，利用md5的文件名
+
+    file_name = "{0}/{1}.{2}".format(os.getcwd(), md5(image).hexdigest(), "jpg")
+    if not os.path.exists(file_name):
+        with open(file_name, "wb") as f:
+            f.write(image)
+            f.close()
 
 def main():
     html = get_page_index(0, "街拍")
