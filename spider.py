@@ -104,7 +104,14 @@ def parse_page_detail(html, url):
     else:
         print("详情页解析失败")
 
-
+'''
+6.保存到数据库
+'''
+def save_to_db(result):
+    if db[MONGO_TABLE].insert(result):
+        print("存储到数据库成功")
+        return True
+    return False
 
 def main():
     html = get_page_index(0, "街拍")
@@ -112,7 +119,8 @@ def main():
         detail = get_page_detail(url)
         # 这里进行一下判断，如果能正常返回在进行解析
         if detail and parse_page_detail(detail, url):
-            print (parse_page_detail(detail, url))
+            result = parse_page_detail(detail, url)
+            save_to_db(result)
 if __name__ == "__main__":
     main()
 
